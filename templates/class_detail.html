@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}{{ class_obj.name }} - Class Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-door-open me-3"></i>{{ class_obj.name }}</h2>
+            <p class="text-muted mb-0">
+                <i class="fas fa-book me-2"></i>{{ class_obj.subject.name }} ({{ class_obj.subject.code }})
+                {% if class_obj.section %}| Section: {{ class_obj.section }}{% endif %}
+                {% if class_obj.academic_year %}| {{ class_obj.academic_year }}{% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('teacher_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="mb-3">Quick Actions:</h6>
+                    <div class="btn-group" role="group">
+                        <a href="{{ url_for('manage_marks', class_id=class_obj.id) }}" class="btn btn-success">
+                            <i class="fas fa-pencil-alt me-2"></i>Manage Marks
+                        </a>
+                        <a href="{{ url_for('manage_attendance', class_id=class_obj.id) }}" class="btn btn-info">
+                            <i class="fas fa-check me-2"></i>Mark Attendance
+                        </a>
+                        <a href="{{ url_for('class_analytics', class_id=class_obj.id) }}" class="btn btn-warning">
+                            <i class="fas fa-chart-bar me-2"></i>Analytics
+                        </a>
+                        <a href="{{ url_for('manage_announcements', class_id=class_obj.id) }}" class="btn btn-primary">
+                            <i class="fas fa-bullhorn me-2"></i>Announcements
+                        </a>
+                        <a href="{{ url_for('manage_assignments', class_id=class_obj.id) }}" class="btn btn-secondary">
+                            <i class="fas fa-tasks me-2"></i>Assignments
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Class Roster -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Class Roster ({{ class_obj.students|length }} students)</h5>
+                    <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                        <i class="fas fa-user-plus me-2"></i>Add Student
+                    </button>
+                </div>
+                <div class="card-body">
+                    {% if class_obj.students %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Roll Number</th>
+                                        <th>Student Name</th>
+                                        <th>Email</th>
+                                        <th>Enrolled Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in class_obj.students %}
+                                    <tr>
+                                        <td>{{ loop.index }}</td>
+                                        <td><span class="badge bg-secondary">{{ student.roll_number }}</span></td>
+                                        <td><i class="fas fa-user-graduate me-2"></i>{{ student.user.username }}</td>
+                                        <td>{{ student.user.email }}</td>
+                                        <td>{{ student.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <form method="POST" action="{{ url_for('remove_student_from_class', class_id=class_obj.id, student_id=student.id) }}" 
+                                                  onsubmit="return confirm('Remove {{ student.user.username }} from this class?');"
+                                                  style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-danger" title="Remove from class">
+                                                    <i class="fas fa-user-minus"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5>No Students Enrolled Yet</h5>
+                            <p class="text-muted">Click "Add Student" to enroll students in this class</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Student Modal -->
+<div class="modal fade" id="addStudentModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add Student to Class</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_student_to_class', class_id=class_obj.id) }}">
+                <div class="modal-body">
+                    {% if available_students %}
+                        <div class="mb-3">
+                            <label class="form-label">Select Student *</label>
+                            <select class="form-select" name="student_id" required>
+                                <option value="">Choose a student...</option>
+                                {% for student in available_students %}
+                                    <option value="{{ student.id }}">
+                                        {{ student.user.username }} ({{ student.roll_number }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>All registered students are already enrolled in this class.
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {% if available_students %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Add Student
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

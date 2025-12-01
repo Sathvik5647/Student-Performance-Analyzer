@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard - StudyTracker{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-md-9">
+            <h2><i class="fas fa-user-graduate me-3"></i>My Dashboard</h2>
+            <p class="text-muted">Roll Number: {{ student.roll_number }}</p>
+        </div>
+        <div class="col-md-3 text-end">
+            <a href="{{ url_for('student_analytics') }}" class="btn btn-primary">
+                <i class="fas fa-chart-line me-2"></i>View Analytics
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-door-open fa-3x text-primary mb-3"></i>
+                    <h3>{{ stats.total_classes }}</h3>
+                    <p class="text-muted mb-0">Enrolled Classes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-chart-line fa-3x text-success mb-3"></i>
+                    <h3>{{ "%.1f"|format(stats.overall_average) }}%</h3>
+                    <p class="text-muted mb-0">Overall Average</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-check-circle fa-3x text-info mb-3"></i>
+                    <h3>{{ "%.1f"|format(stats.overall_attendance) }}%</h3>
+                    <p class="text-muted mb-0">Attendance</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-clipboard-list fa-3x text-warning mb-3"></i>
+                    <h3>{{ stats.total_marks }}</h3>
+                    <p class="text-muted mb-0">Total Exams</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrolled Classes -->
+    <div class="row">
+        <div class="col-12 mb-3">
+            <h4><i class="fas fa-book-open me-2"></i>My Classes</h4>
+        </div>
+
+        {% if classes %}
+            {% for class in classes %}
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header" style="background: linear-gradient(45deg, #2E8B57, #20B2AA);">
+                        <h5 class="text-white mb-0">{{ class.name }}</h5>
+                        {% if class.section %}
+                            <small class="text-white-50">Section: {{ class.section }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <i class="fas fa-book text-primary me-2"></i>
+                            <strong>{{ class.subject.name }}</strong>
+                        </p>
+                        <p class="mb-2">
+                            <i class="fas fa-chalkboard-teacher text-info me-2"></i>
+                            {{ class.teacher.user.username }}
+                        </p>
+                        <p class="mb-3">
+                            <i class="fas fa-calendar text-success me-2"></i>
+                            {{ class.academic_year or 'N/A' }}
+                        </p>
+                        
+                        {% set student_marks = class.marks|selectattr('student_id', 'equalto', student.id)|list %}
+                        {% set student_attendance = class.attendance|selectattr('student_id', 'equalto', student.id)|list %}
+                        
+                        <div class="mb-3">
+                            <small class="text-muted">Your Performance:</small>
+                            <div class="d-flex justify-content-between">
+                                <span>
+                                    <i class="fas fa-pencil-alt text-success me-1"></i>
+                                    {{ student_marks|length }} exam(s)
+                                </span>
+                                <span>
+                                    <i class="fas fa-check text-info me-1"></i>
+                                    {{ student_attendance|length }} day(s)
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <a href="{{ url_for('student_view_class', class_id=class.id) }}" class="btn btn-primary w-100">
+                            <i class="fas fa-eye me-2"></i>View Details
+                        </a>
+                    </div>
+                    <div class="card-footer text-muted">
+                        <small>Enrolled: {{ (class.students|selectattr('id', 'equalto', student.id)|first).created_at.strftime('%Y-%m-%d') if class.students|selectattr('id', 'equalto', student.id)|first else 'N/A' }}</small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h4>Not Enrolled in Any Classes Yet</h4>
+                        <p class="text-muted">Your teacher will add you to classes soon</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

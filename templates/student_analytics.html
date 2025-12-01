@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}My Analytics - StudyTracker{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-chart-line me-3"></i>My Performance Analytics</h2>
+            <p class="text-muted">Roll Number: {{ student.roll_number }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Performance Chart -->
+    {% if plot_url %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-area me-2"></i>Performance Visualization</h5>
+                </div>
+                <div class="card-body text-center">
+                    <img src="data:image/png;base64,{{ plot_url }}" class="img-fluid" alt="Performance Analytics">
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-chart-pie fa-4x text-muted mb-3"></i>
+                    <h4>No Performance Data Available</h4>
+                    <p class="text-muted">Your teachers will add marks soon. Check back later!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Detailed Marks by Class -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-table me-2"></i>All My Marks</h5>
+                </div>
+                <div class="card-body">
+                    {% if student.marks %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Class</th>
+                                        <th>Subject</th>
+                                        <th>Exam Type</th>
+                                        <th>Marks</th>
+                                        <th>Percentage</th>
+                                        <th>Grade</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for mark in student.marks|sort(attribute='exam_date', reverse=True) %}
+                                    <tr>
+                                        <td>{{ mark.class_ref.name }}</td>
+                                        <td>{{ mark.subject.name }}</td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if mark.exam_type == 'final' %}bg-danger
+                                                {% elif mark.exam_type == 'midterm' %}bg-warning
+                                                {% elif mark.exam_type == 'quiz' %}bg-info
+                                                {% else %}bg-secondary{% endif %}">
+                                                {{ mark.exam_type|title }}
+                                            </span>
+                                        </td>
+                                        <td>{{ mark.marks }} / {{ mark.max_marks }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar 
+                                                    {% if mark.get_percentage() >= 90 %}bg-success
+                                                    {% elif mark.get_percentage() >= 70 %}bg-info
+                                                    {% elif mark.get_percentage() >= 50 %}bg-warning
+                                                    {% else %}bg-danger{% endif %}"
+                                                    style="width: {{ mark.get_percentage() }}%">
+                                                    {{ "%.1f"|format(mark.get_percentage()) }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge 
+                                                {% if mark.get_grade() == 'A' %}bg-success
+                                                {% elif mark.get_grade() == 'B' %}bg-info
+                                                {% elif mark.get_grade() == 'C' %}bg-warning
+                                                {% else %}bg-danger{% endif %}">
+                                                {{ mark.get_grade() }}
+                                            </span>
+                                        </td>
+                                        <td>{{ mark.exam_date.strftime('%Y-%m-%d') if mark.exam_date else 'N/A' }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-clipboard fa-4x text-muted mb-3"></i>
+                            <h5>No Marks Yet</h5>
+                            <p class="text-muted">Your teachers haven't added any marks yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -69,6 +69,9 @@
             <div class="mb-3">
                 <input type="password" class="form-control" name="password" placeholder="Password" required>
             </div>
+            <div class="mb-3">
+                <input type="password" class="form-control" name="repassword" placeholder="Confirm Password" required>
+            </div>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-user-plus me-2"></i>Create Account
             </button>
@@ -76,7 +79,7 @@
         
         <div class="text-center mt-3">
             <p>Already have an account? <a href="{{ url_for('login') }}">Sign in here</a></p>
-            <a href="{{ url_for('home') }}">← Back to Home</a>
+            ←<a href="{{ url_for('home') }}"> Back to Home</a>
         </div>
     </div>
 </body>

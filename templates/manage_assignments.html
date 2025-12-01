@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Assignments - {{ class_obj.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-tasks me-3"></i>Manage Assignments</h2>
+            <p class="text-muted">{{ class_obj.name }} - {{ class_obj.subject.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Class
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Create Assignment Form -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Create Assignment</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_assignment', class_id=class_obj.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" placeholder="e.g., Chapter 5 Exercise" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" name="description" rows="4" placeholder="Assignment details..."></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Due Date</label>
+                            <input type="date" class="form-control" name="due_date">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Max Marks</label>
+                            <input type="number" class="form-control" name="max_marks" step="0.01" min="0" placeholder="e.g., 100">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-save me-2"></i>Create Assignment
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments List -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Assignments ({{ class_obj.assignments|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if class_obj.assignments %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>Due Date</th>
+                                        <th>Max Marks</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for assignment in class_obj.assignments|sort(attribute='due_date') %}
+                                    {% set is_overdue = assignment.due_date and assignment.due_date < today %}
+                                    <tr class="{% if is_overdue %}table-warning{% endif %}">
+                                        <td>
+                                            <strong>{{ assignment.title }}</strong>
+                                            <br>
+                                            <small class="text-muted">Created: {{ assignment.created_at.strftime('%Y-%m-%d') }}</small>
+                                        </td>
+                                        <td>
+                                            {% if assignment.description %}
+                                                {{ assignment.description[:100] }}{% if assignment.description|length > 100 %}...{% endif %}
+                                            {% else %}
+                                                <span class="text-muted">No description</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if assignment.due_date %}
+                                                {{ assignment.due_date.strftime('%Y-%m-%d') }}
+                                            {% else %}
+                                                <span class="text-muted">No due date</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if assignment.max_marks %}
+                                                {{ assignment.max_marks }}
+                                            {% else %}
+                                                <span class="text-muted">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if assignment.due_date %}
+                                                {% if is_overdue %}
+                                                    <span class="badge bg-danger">Overdue</span>
+                                                {% else %}
+                                                    <span class="badge bg-success">Active</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-secondary">No Deadline</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5>No Assignments Yet</h5>
+                            <p class="text-muted">Use the form on the left to create your first assignment</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

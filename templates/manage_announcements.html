@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Announcements - {{ class_obj.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-bullhorn me-3"></i>Manage Announcements</h2>
+            <p class="text-muted">{{ class_obj.name }} - {{ class_obj.subject.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Class
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Post Announcement Form -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus me-2"></i>Post Announcement</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_announcement', class_id=class_obj.id) }}">
+                        <div class="mb-3">
+                            <label class="form-label">Title *</label>
+                            <input type="text" class="form-control" name="title" placeholder="e.g., Important Notice" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Message *</label>
+                            <textarea class="form-control" name="content" rows="8" placeholder="Write your announcement here..." required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-paper-plane me-2"></i>Post Announcement
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements List -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>All Announcements ({{ class_obj.announcements|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if class_obj.announcements %}
+                        {% for announcement in class_obj.announcements|sort(attribute='created_at', reverse=True) %}
+                        <div class="card mb-3">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-megaphone text-primary me-2"></i>
+                                    {{ announcement.title }}
+                                </h6>
+                                <small class="text-muted">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ announcement.created_at.strftime('%Y-%m-%d %H:%M') }}
+                                </small>
+                            </div>
+                            <div class="card-body">
+                                <p class="mb-0">{{ announcement.content }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5>No Announcements Yet</h5>
+                            <p class="text-muted">Use the form on the left to post your first announcement</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

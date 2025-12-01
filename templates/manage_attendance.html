@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Attendance - {{ class_obj.name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2><i class="fas fa-check me-3"></i>Manage Attendance</h2>
+            <p class="text-muted">{{ class_obj.name }} - {{ class_obj.subject.name }}</p>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Class
+            </a>
+        </div>
+    </div>
+
+    <!-- Mark Attendance Form -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-calendar-check me-2"></i>Mark Attendance for {{ today }}</h5>
+                </div>
+                <div class="card-body">
+                    {% if class_obj.students %}
+                        <form method="POST" action="{{ url_for('mark_attendance', class_id=class_obj.id) }}">
+                            <div class="mb-3">
+                                <label class="form-label">Select Date</label>
+                                <input type="date" class="form-control" name="date" value="{{ today }}" max="{{ today }}">
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 5%">#</th>
+                                            <th style="width: 25%">Student Name</th>
+                                            <th style="width: 15%">Roll Number</th>
+                                            <th style="width: 55%">Attendance Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for student in class_obj.students %}
+                                        {% set existing_attendance = attendance_records|selectattr('student_id', 'equalto', student.id)|first %}
+                                        <tr>
+                                            <td>{{ loop.index }}</td>
+                                            <td><i class="fas fa-user-graduate me-2"></i>{{ student.user.username }}</td>
+                                            <td><span class="badge bg-secondary">{{ student.roll_number }}</span></td>
+                                            <td>
+                                                <div class="btn-group w-100" role="group">
+                                                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                                                           id="present_{{ student.id }}" value="present" 
+                                                           {% if existing_attendance and existing_attendance.status == 'present' %}checked{% endif %}>
+                                                    <label class="btn btn-outline-success" for="present_{{ student.id }}">
+                                                        <i class="fas fa-check me-1"></i>Present
+                                                    </label>
+
+                                                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                                                           id="absent_{{ student.id }}" value="absent"
+                                                           {% if existing_attendance and existing_attendance.status == 'absent' %}checked{% endif %}>
+                                                    <label class="btn btn-outline-danger" for="absent_{{ student.id }}">
+                                                        <i class="fas fa-times me-1"></i>Absent
+                                                    </label>
+
+                                                    <input type="radio" class="btn-check" name="status_{{ student.id }}" 
+                                                           id="late_{{ student.id }}" value="late"
+                                                           {% if existing_attendance and existing_attendance.status == 'late' %}checked{% endif %}>
+                                                    <label class="btn btn-outline-warning" for="late_{{ student.id }}">
+                                                        <i class="fas fa-clock me-1"></i>Late
+                                                    </label>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-save me-2"></i>Save Attendance
+                                </button>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                            <h5>No Students Enrolled</h5>
+                            <p class="text-muted">Add students to this class first</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Attendance History -->
+    {% if class_obj.attendance %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Recent Attendance Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in class_obj.attendance|sort(attribute='date', reverse=True)|slice(20)|first %}
+                                <tr>
+                                    <td>{{ record.date.strftime('%Y-%m-%d') }}</td>
+                                    <td>{{ record.student.user.username }} ({{ record.student.roll_number }})</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if record.status == 'present' %}bg-success
+                                            {% elif record.status == 'absent' %}bg-danger
+                                            {% else %}bg-warning{% endif %}">
+                                            {{ record.status|title }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
